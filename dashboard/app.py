@@ -119,8 +119,8 @@ def load():
     reader = shapefile.Reader(str(DATA / 'chicago_zip'))
     frame = pd.DataFrame([record.as_dict() for record in reader.records()])
     frame['zip'] = frame['zip'].astype(str)
-    frame.loc[frame.Pop2020.isna() | (frame.Pop2020 <= 0), [*HOUSING.values(), 'edvis24rc']] = np.nan
-    frame.loc[frame.edvis2024.isna(), ['edvisr2024', 'edvis24rc']] = np.nan
+    # Use the supplied rates, including valid zeros, independently of missing
+    # population or visit-count fields to match the outline's source data.
     geo = {'type': 'FeatureCollection', 
            'features': [
         {'type': 'Feature', 'id': str(record['zip']), 'properties': {}, 'geometry': shape.__geo_interface__}
@@ -276,9 +276,12 @@ with st.container(border=True, key='selected_indicators'):
     st.divider()
     st.header('Relationship', anchor=False)
     st.subheader('Youth Asthma ED Visits vs. ' + display_title(hx.replace(' reporting', ' reports')), anchor=False)
+    # The outline's scatterplot screenshots use counts (hdf2024), not rates.
+    x = {'hdf24r': 'hdf2024', 'aaf24r': 'aaf2024',
+         'bba24r': 'bba2024', 'sga24r': 'sga2024'}[HOUSING[hx]]
     valid=df.dropna(subset=[x,y])
     st.caption(f'n = {len(valid)} ZIP Code Zones')
-    x_label = display_title(hx.replace(' reporting', ' reports')) + ' per 10,000 Residents'
+    x_label = display_title(hx.replace(' reporting', ' reports')) + ' (Count)'
     y_label = {
         'edvisr2024': 'Youth Asthma ED Visits per 10,000 Youth',
         'edvis24rc': 'Youth Asthma ED Visits per 10,000 Residents',
@@ -294,7 +297,7 @@ with st.container(border=True, key='selected_indicators'):
                                 name='Linear trend',line=dict(color='#a96035',width=2)))
     fig.update_layout(height=340,showlegend=False,plot_bgcolor='white',
                       margin=dict(l=0,r=0,t=10,b=10))
-    # Set complete numeric ranges so the browser cannot add space below zero
+    # Leave room below zero so points at the origin remain visible.
     for axis in ['x', 'y']:
         plotted = np.concatenate([np.asarray(getattr(trace, axis), dtype=float) for trace in fig.data])
         finite = plotted[np.isfinite(plotted)]
@@ -304,12 +307,16 @@ with st.container(border=True, key='selected_indicators'):
         step = next(multiplier * magnitude for multiplier in [1, 2, 2.5, 5, 10]
                     if multiplier * magnitude >= target_step)
         upper = np.ceil(maximum * 1.05 / step) * step
-        settings = dict(range=[0, float(upper)], autorange=False, tickmode='linear',
-                        tick0=0, dtick=float(step), showline=True, linecolor='#c7d0cb')
+        lower = min(float(finite.min()) if finite.size else 0, 0) - float(upper) * .05
+        settings = dict(range=[lower, float(upper)], autorange=False, tickmode='linear',
+                        tick0=0, dtick=float(step), showline=True, linecolor='#c7d0cb',
+                        zeroline=False)
         if axis == 'x':
             fig.update_xaxes(showgrid=False, **settings)
         else:
-            fig.update_yaxes(gridcolor='#edf0ef', zeroline=False, **settings)
+            fig.update_yaxes(gridcolor='#edf0ef', **settings)
+    fig.add_vline(x=0, line_dash='dash', line_color='#8a9691', line_width=1, layer='below')
+    fig.add_hline(y=0, line_dash='dash', line_color='#8a9691', line_width=1, layer='below')
     st.plotly_chart(fig,width='stretch',key='relationship',config={'displayModeBar':False})
 
 st.divider()
