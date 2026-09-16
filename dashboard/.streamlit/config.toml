@@ -1,0 +1,24 @@
+# Adapted from the shadcn skill template with Source Sans 3 typography.
+[theme]
+base = "light"
+primaryColor = "#287568"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F6F4"
+textColor = "#243B36"
+borderColor = "#E0E7E3"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "8px"
+font = "'Source Sans 3':https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap"
+headingFont = "'Source Sans 3':https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap"
+baseFontSize = 14
+baseFontWeight = 400
+headingFontSizes = ["32px", "24px", "20px", "17px", "15px", "14px"]
+headingFontWeights = [600, 600, 500, 500, 500, 500]
+chartCategoricalColors = ["#307F70", "#A96035", "#8BC3B7", "#DFAC80"]
+dataframeHeaderBackgroundColor = "#F3F6F4"
+
+[theme.sidebar]
+backgroundColor = "#F3F6F4"
+secondaryBackgroundColor = "#FFFFFF"
