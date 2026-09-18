@@ -18,9 +18,9 @@ HOUSING = {'Lead inspection reporting': 'hdf24r', # lead inspection report rates
            'Water in basement reporting': 'aaf24r', # rates per 10,000 population
            'Building violation reporting': 'bba24r', # rates per 10,000 population
            'Rat reporting': 'sga24r'} # rates per 10,000 population
-HEALTH = {'Asthma ED rate per 10,000 youth': 'edvisr2024',
-          'Asthma ED rate per 10,000 residents': 'edvis24rc', 
-          'Asthma ED visit count': 'edvis2024'}
+HEALTH = {'Youth Asthma ED Rate per 10,000 Youth': 'edvisr2024',
+          'Youth Asthma ED Rate per 10,000 Residents': 'edvis24rc',
+          'Youth Asthma ED Visit Count': 'edvis2024'}
 TEAL = ['#e2f0ed', '#b9dbd4', '#8bc3b7', '#5aa595', '#307f70', '#155b50']
 WARM = ['#f8e9dc', '#efcfaf', '#dfac80', '#ca8757', '#a96035', '#824223']
 CENTER = {'lat': 41.84, 'lon': -87.72}
@@ -60,14 +60,14 @@ def matrix_figure(sample, housing, outcome, outcome_label, method):
     titles = [display_title(name.replace(' reporting', '')) for name in housing]
     fig = make_subplots(rows=1, cols=5,
                         horizontal_spacing=.04,
-                        subplot_titles=titles + ['Asthma ED Visit Rates'])
+                        subplot_titles=titles + ['Youth Asthma ED Rates'])
     for column, field in enumerate(housing.values(), start=1):
         xx, yy = standardized[field].to_numpy(), standardized[outcome].to_numpy()
         fig.add_trace(go.Scatter(
             x=xx, y=yy, mode='markers', customdata=sample[['zip', field, outcome]].to_numpy(),
             marker=dict(size=6, color='#307f70', opacity=.7),
             hovertemplate='<b>ZIP %{customdata[0]}</b><br>Reporting Rate (Z-Score): %{x:.2f}'
-                          '<br>Asthma Rate (Z-Score): %{y:.2f}'
+                          '<br>Youth Asthma ED Rate (Z-Score): %{y:.2f}'
                           '<br>Reports / 10,000 Residents: %{customdata[1]:.2f}'
                           '<br>' + outcome_label + ': %{customdata[2]:.2f}<extra></extra>',
         ), row=1, col=column)
@@ -96,13 +96,13 @@ def matrix_figure(sample, housing, outcome, outcome_label, method):
         x=(edges[:-1] + edges[1:]) / 2, y=counts, width=np.diff(edges),
         customdata=np.column_stack([edges[:-1], edges[1:]]),
         marker=dict(color='#8bc3b7', line=dict(color='white', width=1)),
-        hovertemplate='Asthma Rate (Z-Score)<br>%{customdata[0]:.2f} – %{customdata[1]:.2f}'
+        hovertemplate='Youth Asthma ED Rate (Z-Score)<br>%{customdata[0]:.2f} – %{customdata[1]:.2f}'
                       '<br>Number of ZIP Zones: %{y}<extra></extra>',
     ), row=1, col=5)
-    fig.update_xaxes(title_text='Asthma ED Visit Rate<br>(Z-Score)', showgrid=False, row=1, col=5)
+    fig.update_xaxes(title_text='Youth Asthma ED Rate<br>(Z-Score)', showgrid=False, row=1, col=5)
     fig.update_yaxes(title_text='Number of ZIP Zones', rangemode='tozero', dtick=1,
                      row=1, col=5)
-    fig.update_yaxes(title_text='Asthma ED Visit Rate<br>(Z-Score)', row=1, col=1)
+    fig.update_yaxes(title_text='Youth Asthma ED Rate<br>(Z-Score)', row=1, col=1)
     fig.update_yaxes(gridcolor='#edf0ef', zeroline=False)
     fig.update_xaxes(tickformat='.1f')
     for column in range(1, 5):
@@ -226,7 +226,7 @@ def references(numbers, titles):
     for col, number, title in zip(st.columns(len(numbers)), numbers, titles):
         with col:
             with st.container(border=True):
-                st.markdown('**'+display_title(title)+'**')
+                st.markdown('**'+title+'**')
                 st.image(reference_image(number),width='stretch')
 
 st.title('Healthy Homes')
@@ -239,11 +239,10 @@ with st.container(border=True, key='selected_indicators'):
     with housing_control:
         hx = st.selectbox('311 Call Type', list(HOUSING), key='housing', format_func=display_title)
     with health_control:
-        hy = st.selectbox('Asthma Measure', list(HEALTH), key='health', format_func=display_title,
+        hy = st.selectbox('Youth Asthma ED Measure', list(HEALTH), key='health', format_func=display_title,
                           help='ED = Emergency Department')
     x, y = HOUSING[hx], HEALTH[hy]
-    unit = {'edvisr2024':'Asthma ED Visits per 10,000 Youth',
-            'edvis24rc':'Asthma ED Visits per 10,000 Residents', 'edvis2024':'Number of Asthma ED Visits'}[y]
+    unit = hy
     with st.container(key='maps_section'):
         st.header('Maps', anchor=False)
         mode = st.segmented_control('Map view',
@@ -253,7 +252,7 @@ with st.container(border=True, key='selected_indicators'):
         if mode.casefold() in ['quantile map','outlier map']:
             left,right=st.columns(2)
             with left: draw_map(df,geo,x,hx,'Reports per 10,000 residents',WARM,mode)
-            with right: draw_map(df,geo,y,'Youth asthma',unit,TEAL,mode)
+            with right: draw_map(df,geo,y,'Youth Asthma',unit,TEAL,mode)
         elif mode.casefold()=='311 point map':
             points=load_points(x[:3])
             with st.container(border=True):
@@ -282,11 +281,7 @@ with st.container(border=True, key='selected_indicators'):
     valid=df.dropna(subset=[x,y])
     st.caption(f'n = {len(valid)} ZIP Code Zones')
     x_label = display_title(hx.replace(' reporting', ' reports')) + ' (Count)'
-    y_label = {
-        'edvisr2024': 'Youth Asthma ED Visits per 10,000 Youth',
-        'edvis24rc': 'Youth Asthma ED Visits per 10,000 Residents',
-        'edvis2024': 'Youth Asthma ED Visits (Count)',
-    }[y]
+    y_label = hy
     fig=px.scatter(valid,x=x,y=y,hover_name='zip',color_discrete_sequence=['#307f70'],
                    labels={x:x_label,y:y_label})
     fig.update_traces(marker=dict(size=8,opacity=.75))
@@ -322,11 +317,11 @@ with st.container(border=True, key='selected_indicators'):
 st.divider()
 st.header('Compare Housing Indicators', anchor=False)
 with st.container(border=True):
-    compare_health = 'Asthma ED Visits per 10,000 Youth'
+    compare_health = 'Youth Asthma ED Rate per 10,000 Youth'
     compare_y = 'edvisr2024'
     compare_sample = df.replace([np.inf, -np.inf], np.nan).dropna(
         subset=[*HOUSING.values(), compare_y])
-    st.caption(f'n = {len(compare_sample)} ZIP Code Zones')
+    st.caption(f'n = {len(compare_sample)} ZIP Code Zones  \nYouth asthma measure: ED visit rate per 10,000 youth')
     for method in ['Scatterplot matrix', 'Linear association', 'Local regression']:
         st.markdown('**' + display_title(method) + '**')
         fig = matrix_figure(compare_sample, HOUSING, compare_y, compare_health, method)
@@ -335,14 +330,15 @@ with st.container(border=True):
 
 
 st.divider()
-st.header('Where Housing Reports and Asthma Rates Overlap or Cluster', anchor=False)
+st.header('Where Housing Reports and Youth Asthma ED Rates Overlap or Cluster', anchor=False)
+st.caption('Youth asthma measures shown below are based on ED visit rates per 10,000 youth')
 spatial_view = st.segmented_control(
     'Spatial analysis', ['Co-location', 'Quantile LISA', 'Hot and cold spots'],
     default='Co-location', required=True, format_func=display_title, label_visibility='collapsed', key='spatial_view',
 )
 spatial_figures = {
     'Co-location': ([15,16], [
-        'ZIP Zones Where Asthma and Lead Reporting Rates Fall in the Same Group (Q1–Q6)',
+        'ZIP Zones Where Youth Asthma ED and Lead Inspection Reporting Rates Fall in the Same Group',
         'ZIP Zones Where Both Rates Fall in the Highest Group (Q6)',
     ]),
     'Quantile LISA': ([17,18,19], [
@@ -360,9 +356,9 @@ if spatial_view == 'Co-location':
              'from lowest (Q1) to highest (Q6). The left map highlights ZIP zones in the same group for both rates, and '
              'the right map highlights only those in Q6 for both. Matching groups indicate similar rankings, not equal rates.')
 elif spatial_view == 'Quantile LISA':
-    st.write('Tests whether ZIP zones in the highest group (Q6) cluster with neighboring zones, '
-             'for asthma, lead reporting, or both together.')
+    st.write('Shows whether ZIP zones in the highest group (Q6) cluster with neighboring zones, '
+             'for youth asthma ED visits, lead inspection reporting, or both.')
 elif spatial_view == 'Hot and cold spots':
-    st.write('Local Moran identifies statistically significant hot spots (High–High), cold spots (Low–Low), '
+    st.write('Local Moran’s I identifies statistically significant hot spots (High–High), cold spots (Low–Low), '
              'and ZIP zones that contrast with their neighbors (spatial outliers: High–Low or Low–High).')
 references(*spatial_figures[spatial_view])
