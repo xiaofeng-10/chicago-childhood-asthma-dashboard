@@ -1,0 +1,10 @@
+# Dashboard dependencies for Streamlit Community Cloud
+# Use Python 3.12 to match the local preview environment
+numpy==2.5.3
+pandas==3.0.5
+plotly==7.0.0
+pyshp==3.1.6
+streamlit==1.64.0
+
+# Required for Local Moran's I (not included with Streamlit)
+pygeoda==0.1.3
