@@ -1,0 +1,24 @@
+# Shared typography and colors for the dashboard.
+[theme]
+base = "light"
+primaryColor = "#287568"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F6F4"
+textColor = "#24312D"
+borderColor = "#E0E7E3"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "8px"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+baseFontSize = 16
+baseFontWeight = 400
+headingFontSizes = ["32px", "24px", "20px", "17px", "15px", "14px"]
+headingFontWeights = [600, 600, 500, 500, 500, 500]
+chartCategoricalColors = ["#307F70", "#A96035", "#8BC3B7", "#DFAC80"]
+dataframeHeaderBackgroundColor = "#F3F6F4"
+
+[theme.sidebar]
+backgroundColor = "#F3F6F4"
+secondaryBackgroundColor = "#FFFFFF"
