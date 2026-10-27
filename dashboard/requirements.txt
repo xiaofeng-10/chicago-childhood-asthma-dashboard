@@ -8,3 +8,6 @@ streamlit==1.64.0
 
 # Required for Local Moran's I (not included with Streamlit)
 pygeoda==0.1.3
+
+# Local regression
+statsmodels==0.15.0
