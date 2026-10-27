@@ -1,4 +1,4 @@
-# Shared typography and colors for the dashboard.
+# shared typography and colors for the dashboard
 [theme]
 base = "light"
 primaryColor = "#287568"
